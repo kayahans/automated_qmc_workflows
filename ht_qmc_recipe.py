@@ -100,7 +100,7 @@ def transition_metal(atoms):
 # end def transition_metal
 
 
-def ht_qmc_recipe(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps, qmc_pps, dft_functional, scell_list, ecut, vmc_steps, vmc_dt,**kwargs):
+def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps, qmc_pps, dft_functional, scell_list, ecut, vmc_steps, vmc_dt,**kwargs):
     for var, val in kwargs.iteritems():
         kwargs[var] = val
     # end for
