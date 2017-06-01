@@ -273,31 +273,33 @@ def ht_qmc_recipe(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, 
             )
             sims.append(opt)
 
+        # DMC calculations
+        
         vmc_dmc = vmc(
             timestep=vmc_dt,
-            warmupsteps=10000,  # No. of MC steps before data is collected
-            blocks=vmc_blocks_2,  # No. of data blocks recorded in scalar.dat
+            warmupsteps=10000,  
+            blocks=vmc_blocks_2,
             gpu='no',
-            steps=10,  # No. of steps per block
-            substeps=3,  # MC steps taken w/o computing E_local
-            samplesperthread=128  # No. of dmc walkers per thread
+            steps=vmc_steps,
+            substeps=3,
+            samplesperthread=128
         )
         dmc_dmc = dmc(
             gpu='no',
-            timestep=0.01,  # dmc timestep (1/Ha)
-            warmupsteps=500,  # No. of MC steps before data is collected
-            blocks=500,  # No. of data blocks recorded in scalar.dat
-            steps=5,  # No. of steps per block
-            nonlocalmoves=True  # use Casula's T-moves
+            timestep=0.01,
+            warmupsteps=500,
+            blocks=500,
+            steps=5,
+            nonlocalmoves=True
         )
 
         qmc = generate_qmcpack(
             identifier='qmc',  # identifier/file prefix
             path=directory + '/radius.' + str(ks) + '/qmc',  # directory for dmc run
             job=dmc_job,
-            pseudos=qmc_pps,  # qmcpack PP file
-            system=generic_real,  # run graphene  # input format selector
-            input_type='basic',  # qmcpack input
+            pseudos=qmc_pps,
+            system=generic_real,
+            input_type='basic',
             jastrows=[],
             calculations=[vmc_dmc, dmc_dmc],
             dependencies=[(p2q_qmc, 'orbitals'), (opt, 'jastrow')]
