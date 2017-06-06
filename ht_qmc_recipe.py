@@ -14,6 +14,14 @@ import sys
 import os
 import numpy as np
 
+# Global variables
+mag_percent = 0.7
+dmc_samples_per_valence = 80000
+dmc_steps_per_block = 5
+vmc_stats3 = 150000
+vmc_stats = 50000
+
+
 def pause():
     programPause = raw_input("Press the <ENTER> key to continue...")
 
@@ -93,11 +101,11 @@ def transition_metal(atoms):
     'La','Hf','Ta','W','Re','Os','Ir','Pt','Au','Hg',\
     'Ac','Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn'])
     if list(t_metals & set(atoms)):
-        print '= Magnetization is applied on : {\'' + list(t_metals & set(atoms))[0] + "' : 0.7}"
-        return {list(t_metals & set(atoms))[0] : 0.7}
+        print '= Magnetization is applied on : {\'' + list(t_metals & set(atoms))[0] + "' : " + mag_percent + "}"
+        return {list(t_metals & set(atoms))[0] : mag_percent}
     else:
-        print '= Magnetization is applied on : {\'' + list(atoms)[0] + "' : 0.7}         "
-        return {list(atoms)[0] : 0.7}
+        print '= Magnetization is applied on : {\'' + list(atoms)[0] + "' : " + mag_percent + "}"
+        return {list(atoms)[0] : mag_percent}
 # end def transition_metal
 
 def num_val_e(structure):
@@ -118,7 +126,7 @@ def num_val_e(structure):
 
 def dmc_steps(tot_val,dmc_job):
 
-    tot_dmc_samples = tot_val * 80000
+    tot_dmc_samples = tot_val * dmc_samples_per_valence
     dmc_processes = dmc_job["processes"]
     steps = tot_dmc_samples / dmc_processes
 
@@ -126,9 +134,9 @@ def dmc_steps(tot_val,dmc_job):
 # end dmc_steps
 
 def find_ecut(ecut,dft_pps):
-    
+
     max_ecut = 0
-    
+
     #If a file is provided as the dictionary of Ecut for pps: 1st row pp, 2nd row Ecut (Ry)
     if type(ecut) is str:
 
@@ -155,17 +163,17 @@ def find_ecut(ecut,dft_pps):
     # Simple integer is provided
     elif type(ecut) is int:
         max_ecut = ecut
-    
+
     #
     elif type(ecut) is dict:
         for pp, pp_ecut in ecut.iteritems():
-            if type(pp) is str and type(pp_ecut) is int: 
+            if type(pp) is str and type(pp_ecut) is int:
                 if pp_ecut > max_ecut:
                     max_ecut = pp_ecut
-    
+
     else:
         error_handler("Unknown type in ecut parameter")
-        
+
     return max_ecut
 
 def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps, qmc_pps, dft_functional, scell_list, ecut, vmc_steps, vmc_dt,**kwargs):
@@ -197,9 +205,9 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
     # Create DMC input parameters, assuming 1 walker per process
 
     (tot_dmc_steps, dmc_walkers, tot_dmc_samples) = dmc_steps(tot_val, dmc_job)
-    dmc_steps_per_block = 5
-    dmc_blocks = tot_dmc_steps / dmc_steps_per_block
     
+    dmc_blocks = tot_dmc_steps / dmc_steps_per_block
+
     ecut = find_ecut(ecut,dft_pps)
 
     print "= Using supercells of size: " + ' '.join(map(str, scell_list)) + " !               "
@@ -308,8 +316,8 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
 
         #VMC calculations
 
-        vmc_blocks_1 = 50000 / vmc_steps
-        vmc_blocks_2 = 150000 / vmc_steps
+        vmc_blocks_1 = vmc_stats / vmc_steps
+        vmc_blocks_2 = vmc_stats3 / vmc_steps
 
         linopt = linear(
             energy              = 0.0,
