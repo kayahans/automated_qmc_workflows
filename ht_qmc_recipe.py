@@ -11,6 +11,7 @@ from nexus import generate_qmcpack
 from nexus import loop,linear,vmc,dmc
 
 import sys
+import os
 import numpy as np
 
 def pause():
@@ -99,6 +100,73 @@ def transition_metal(atoms):
         return {list(atoms)[0] : 0.7}
 # end def transition_metal
 
+def num_val_e(structure):
+    #print structure
+    gen_info    = structure["generation_info"]
+    particles   = structure["particles"]
+    atoms = gen_info["atoms"]
+
+    tot_valence = 0
+
+    for atom in atoms:
+        atom_valence = particles[atom]["charge"]-particles[atom]["core_electrons"]
+        tot_valence = atom_valence + tot_valence
+
+    return tot_valence
+
+# end num_val_e
+
+def dmc_steps(tot_val,dmc_job):
+
+    tot_dmc_samples = tot_val * 80000
+    dmc_processes = dmc_job["processes"]
+    steps = tot_dmc_samples / dmc_processes
+
+    return (steps, dmc_processes, tot_dmc_samples)
+# end dmc_steps
+
+def find_ecut(ecut,dft_pps):
+    
+    max_ecut = 0
+    
+    #If a file is provided as the dictionary of Ecut for pps: 1st row pp, 2nd row Ecut (Ry)
+    if type(ecut) is str:
+
+        if not os.path.exists(str):
+            error_handler("No such directory exists: " + ecut)
+
+        pp_file = ecut
+        pp_lib = {}
+
+        print "Ecut is read from " + pp_file
+        with open(pp_file) as f:
+            for line in f:
+                (key, val) = line.split()
+                pp_lib[key] = val
+
+
+        for pp in dft_pps:
+            if pp in pp_lib:
+                if pp_lib[pp] > max_ecut:
+                    max_ecut = pp_lib[pp]
+            else:
+                error_handler(pp + " is not found in " + pp_file)
+
+    # Simple integer is provided
+    elif type(ecut) is int:
+        max_ecut = ecut
+    
+    #
+    elif type(ecut) is dict:
+        for pp, pp_ecut in ecut.iteritems():
+            if type(pp) is str and type(pp_ecut) is int: 
+                if pp_ecut > max_ecut:
+                    max_ecut = pp_ecut
+    
+    else:
+        error_handler("Unknown type in ecut parameter")
+        
+    return max_ecut
 
 def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps, qmc_pps, dft_functional, scell_list, ecut, vmc_steps, vmc_dt,**kwargs):
     for var, val in kwargs.iteritems():
@@ -116,8 +184,23 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
         gen_info.update({key: value})
     gen_info = clean_gen_info(gen_info)
 
+    # Structure of the unit cell
+    structure = generate_structure(gen_info)
+
+    # get the supercell matrices from integer list and create supercell matrices
     scell_list = check_scell_list(scell_list)
     scell_matrices = get_supercells(structure["structure"]["axes"], scell_list)
+
+    # Total number of valence electrons in the input cell
+    tot_val = num_val_e(structure)
+
+    # Create DMC input parameters, assuming 1 walker per process
+
+    (tot_dmc_steps, dmc_walkers, tot_dmc_samples) = dmc_steps(tot_val, dmc_job)
+    dmc_steps_per_block = 5
+    dmc_blocks = tot_dmc_steps / dmc_steps_per_block
+    
+    ecut = find_ecut(ecut,dft_pps)
 
     print "= Using supercells of size: " + ' '.join(map(str, scell_list)) + " !               "
     print "====================================================="
@@ -127,9 +210,15 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
     start_mag = transition_metal(gen_info["atoms"])
     print "====================================================="
     print "=                VMC Settings: "
-    print "= Using " + str(vmc_steps) + " and " + str(vmc_dt)
+    print "= Using " + str(vmc_steps) + " VMC steps and " + str(vmc_dt) + " VMC timestep"
     print "====================================================="
-    structure = generate_structure(gen_info)
+    print "=                DMC Settings: "
+    print "= Using " + str(tot_dmc_steps) + " steps for DMC statistics!"
+    print "= Using " + str(dmc_walkers) + " processses and total of " + str(tot_dmc_samples) + " DMC samples!"
+    print "= (8000 samples per valence electron )"
+    print "====================================================="
+
+
     sims = []
     scf_conv = generate_pwscf(
         # nexus inputs
@@ -274,10 +363,12 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
             sims.append(opt)
 
         # DMC calculations
-        
+
+
+
         vmc_dmc = vmc(
             timestep=vmc_dt,
-            warmupsteps=10000,  
+            warmupsteps=10000,
             blocks=vmc_blocks_2,
             gpu='no',
             steps=vmc_steps,
@@ -288,8 +379,8 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
             gpu='no',
             timestep=0.01,
             warmupsteps=500,
-            blocks=500,
-            steps=5,
+            blocks=dmc_blocks,
+            steps=dmc_steps_per_block,
             nonlocalmoves=True
         )
 
