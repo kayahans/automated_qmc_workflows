@@ -356,7 +356,7 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
             unreweightedvariance= 1.0,
             reweightedvariance  = 0.0,
             timestep            = vmc_dt,
-            warmupsteps         = 5000,
+            warmupsteps         = 100,
             walkers             = 1,
             steps               = vmc_steps,
             blocks 	        = vmc_blocks_1,
