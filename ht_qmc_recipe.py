@@ -18,7 +18,7 @@ from datetime import datetime
 # Global variables
 mag_percent             = 0.7
 dmc_samples_per_valence = 80000
-dmc_steps_per_block     = 5
+dmc_steps_per_block     = 1
 vmc_stats3              = 15000
 vmc_stats               = 5000
 date = "{:%B_%d_%H_%M}".format(datetime.now())
@@ -233,7 +233,7 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
     # Total number of valence electrons in the input cell
     tot_val = num_val_e(structure)
 
-    # Create DMC input parameters, assuming 1 walker per process
+    # Create input parameters, assuming 1 walker per process
 
     (tot_dmc_steps, dmc_walkers, tot_dmc_samples) = dmc_steps(tot_val, dmc_job)
 
@@ -351,8 +351,6 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
 
         vmc_blocks_1 = vmc_stats / vmc_steps
         vmc_blocks_2 = vmc_stats3 / vmc_steps
-	samples_1 = 12 * vmc_blocks_1 * 32 * 16 
-	samples_2 = 12 * vmc_blocks_2 * 32 * 16
         linopt = linear(
             energy              = 0.0,
             unreweightedvariance= 1.0,
@@ -363,7 +361,7 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
             steps               = vmc_steps,
             blocks 	        = vmc_blocks_1,
             substeps            = 12,
-            samples 		= samples_1,
+            samples 		= vmc_stats,
 	    nonlocalpp          = True,
             usebuffer           = True,
             minwalkers          = 0.5,
@@ -373,7 +371,7 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
         )
         linopt2 = linopt.copy()
         linopt2.blocks = vmc_blocks_2
-	linopt2.samples = samples_2
+	linopt2.samples = vmc_stats3
 
         if ks == ks_min:
             opt = generate_qmcpack(
@@ -411,11 +409,11 @@ def ht_qmc(structure, directory, dft_job, p2q_job, vmc_opt_job, dmc_job, dft_pps
 
         vmc_dmc = vmc(
             timestep=vmc_dt,
-            warmupsteps=10000,
+            warmupsteps=100,
             blocks=vmc_blocks_2,
             gpu='no',
             steps=vmc_steps,
-            substeps=3,
+            substeps=12,
             samplesperthread=1
         )
         dmc_dmc = dmc(
