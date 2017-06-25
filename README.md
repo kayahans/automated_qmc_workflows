@@ -5,9 +5,12 @@ Scripts use a lot of functionalities from Nexus software suite(http://qmcpack.or
 
 -- Requirements 
 
-    - QMCPACK and Quantum Espresso codes must be installed following their directives in the QMCPACK manual. Re-insallation of Quantum Espresso is especially important for pw2qmcpack.x executable that is used to convert DFT wavefunctions to QMCPACK readable format. 
+    - QMCPACK and Quantum Espresso codes must be installed following their directives in the QMCPACK manual. 
+    Re-installation of Quantum Espresso is especially important for pw2qmcpack.x executable that is used to 
+    convert DFT wavefunctions to QMCPACK readable format. 
 
-    - /library/ht_qmc_recipe.py must be copy pasted to /[qmcpack_home]/nexus/library directory or anywhere defined in PYTHONPATH.
+    - /library/ht_qmc_recipe.py must be copy pasted to /[qmcpack_home]/nexus/library directory or anywhere 
+    defined in PYTHONPATH.
 
 --Test
 
