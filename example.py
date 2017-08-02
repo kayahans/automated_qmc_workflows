@@ -41,7 +41,7 @@ ht_qmc(
     dft_job         = Job(nodes=2, minutes=120, app=pwscf),
     p2q_job         = Job(cores=1, minutes=15, app=pw2qmcpack),
     vmc_opt_job     = Job(nodes=4, threads=16,minutes=120, threads=8, app=qmcpack),
-    dmc_job         = Job(nodes=32, threads=16, minutes=120, threads=8, app=qmcpack),
+    dmc_job         = Job(nodes=256, threads=16, minutes=120, threads=8, app=qmcpack),
     dft_pps         = ['C.BFD.upf'],
     qmc_pps	        = ['C.BFD.xml'],
     dft_functional  = 'lda',
