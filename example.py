@@ -30,7 +30,7 @@ generic = generate_physical_system(
     basis     = [[ 0  , 0  , 0],  # basis vectors
                  [2./3,1./3, 0]],
     tiling    = (1,1,1),          # tiling of primitive cell
-    kgrid     = (8,8,1),          # Monkhorst-Pack grid
+    kgrid     = (4,4,1),          # Monkhorst-Pack grid
     kshift    = (.5,.5,.5),       # and shift
     C         = 4                 # C has 4 valence electrons
 )
@@ -40,8 +40,8 @@ ht_qmc(
     directory       = './graphene',
     dft_job         = Job(nodes=2, minutes=120, app=pwscf),
     p2q_job         = Job(cores=1, minutes=15, app=pw2qmcpack),
-    vmc_opt_job     = Job(nodes=4, threads=16,minutes=120, threads=8, app=qmcpack),
-    dmc_job         = Job(nodes=256, threads=16, minutes=120, threads=8, app=qmcpack),
+    vmc_opt_job     = Job(nodes=32, threads=16,minutes=120, app=qmcpack),
+    dmc_job         = Job(nodes=512, threads=16, minutes=120, app=qmcpack),
     dft_pps         = ['C.BFD.upf'],
     qmc_pps	        = ['C.BFD.xml'],
     dft_functional  = 'lda',
