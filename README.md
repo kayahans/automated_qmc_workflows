@@ -16,7 +16,9 @@ Scripts use a lot of functionalities from Nexus software suite(http://qmcpack.or
 
     - example.py is calculation of an example system (graphene) that can be invoked in any directory. 
 
-Intention is to adapt these scripts as published in J. Chem. Theory Comput., 2017, 13 (5), pp 1943-1951. Please cite this work, publications related to QMCPACK and Nexus suite, if you use these scripts.
+Intention is to adapt these scripts as published in J. Chem. Theory Comput., 2017, 13 (5), pp 1943-1951. 
+https://pubs.acs.org/doi/abs/10.1021/acs.jctc.6b01179
+Please cite this work, publications related to QMCPACK and Nexus suite, if you use these scripts.
 
 - The publication is published using CASINO (https://vallico.net/casinoqmc/) where especially some of the VMC parametrization is already automatized (vmc timestep optimization and on the fly reblocking). QMCPACK doesn't have that capability yet, therefore these would need to be performed with a separate script before using the example.py:
     - vmc_steps: # of steps within a block
